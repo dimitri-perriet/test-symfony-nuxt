@@ -32,6 +32,7 @@ class CreateUserCommand extends Command
             ->addArgument('password', InputArgument::REQUIRED, 'Mot de passe')
             ->addArgument('nom', InputArgument::REQUIRED, 'Nom de famille')
             ->addArgument('prenom', InputArgument::REQUIRED, 'Prénom')
+            ->addArgument('roles', InputArgument::OPTIONAL, 'Rôles (séparés par des virgules)', 'ROLE_USER')
         ;
     }
 
@@ -43,11 +44,15 @@ class CreateUserCommand extends Command
         $password = $input->getArgument('password');
         $nom = $input->getArgument('nom');
         $prenom = $input->getArgument('prenom');
+        $rolesString = $input->getArgument('roles');
+
+        $roles = array_map('trim', explode(',', $rolesString));
 
         $user = new User();
         $user->setEmail($email);
         $user->setNom($nom);
         $user->setPrenom($prenom);
+        $user->setRoles($roles);
         
         $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
         $user->setPassword($hashedPassword);
@@ -55,7 +60,7 @@ class CreateUserCommand extends Command
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $io->success(sprintf('Utilisateur %s créé avec succès !', $email));
+        $io->success(sprintf('Utilisateur %s créé avec succès avec les rôles : %s', $email, implode(', ', $roles)));
 
         return Command::SUCCESS;
     }

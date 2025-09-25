@@ -3,13 +3,26 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\CategorieRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CategorieRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(),  // Lecture publique
+        new Get(),           // Lecture publique
+        new Post(security: "is_granted('ROLE_USER')"),  // Création par utilisateurs authentifiés
+        new Put(security: "is_granted('ROLE_ADMIN')"),  // Modification par administrateurs uniquement
+        new Delete(security: "is_granted('ROLE_ADMIN')") // Suppression par administrateurs uniquement
+    ]
+)]
 class Categorie
 {
     #[ORM\Id]

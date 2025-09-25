@@ -3,11 +3,30 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\LivreRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LivreRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Get(),
+        new Post(
+            security: "is_granted('ROLE_USER')",
+            processor: \App\State\LivreProcessor::class
+        ),
+        new Put(
+            security: "is_granted('ROLE_ADMIN') or (is_granted('ROLE_USER') and object.getProprietaire() == user)",
+            processor: \App\State\LivreProcessor::class
+        ),
+        new Delete(security: "is_granted('ROLE_ADMIN') or (is_granted('ROLE_USER') and object.getProprietaire() == user)")
+    ]
+)]
 class Livre
 {
     #[ORM\Id]
@@ -40,6 +59,10 @@ class Livre
     #[ORM\ManyToOne(targetEntity: Categorie::class, inversedBy: 'livres')]
     #[ORM\JoinColumn(nullable: true)]
     private ?Categorie $categorie = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'livres')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $proprietaire = null;
 
     public function __construct()
     {
@@ -149,6 +172,19 @@ class Livre
     public function setCategorie(?Categorie $categorie): static
     {
         $this->categorie = $categorie;
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function getProprietaire(): ?User
+    {
+        return $this->proprietaire;
+    }
+
+    public function setProprietaire(?User $proprietaire): static
+    {
+        $this->proprietaire = $proprietaire;
         $this->updatedAt = new \DateTimeImmutable();
 
         return $this;
