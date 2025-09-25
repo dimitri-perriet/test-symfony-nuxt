@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\AuteurRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AuteurRepository::class)]
@@ -36,10 +38,17 @@ class Auteur
     #[ORM\Column]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    /**
+     * @var Collection<int, Livre>
+     */
+    #[ORM\OneToMany(targetEntity: Livre::class, mappedBy: 'auteur')]
+    private Collection $livres;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
+        $this->livres = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -139,5 +148,34 @@ class Auteur
     public function getNomComplet(): string
     {
         return $this->prenom . ' ' . $this->nom;
+    }
+
+    /**
+     * @return Collection<int, Livre>
+     */
+    public function getLivres(): Collection
+    {
+        return $this->livres;
+    }
+
+    public function addLivre(Livre $livre): static
+    {
+        if (!$this->livres->contains($livre)) {
+            $this->livres->add($livre);
+            $livre->setAuteur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLivre(Livre $livre): static
+    {
+        if ($this->livres->removeElement($livre)) {
+            if ($livre->getAuteur() === $this) {
+                $livre->setAuteur(null);
+            }
+        }
+
+        return $this;
     }
 }

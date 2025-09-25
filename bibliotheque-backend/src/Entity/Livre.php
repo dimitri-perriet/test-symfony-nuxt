@@ -33,6 +33,14 @@ class Livre
     #[ORM\Column]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\ManyToOne(targetEntity: Auteur::class, inversedBy: 'livres')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Auteur $auteur = null;
+
+    #[ORM\ManyToOne(targetEntity: Categorie::class, inversedBy: 'livres')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Categorie $categorie = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -116,6 +124,32 @@ class Livre
     public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getAuteur(): ?Auteur
+    {
+        return $this->auteur;
+    }
+
+    public function setAuteur(?Auteur $auteur): static
+    {
+        $this->auteur = $auteur;
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function getCategorie(): ?Categorie
+    {
+        return $this->categorie;
+    }
+
+    public function setCategorie(?Categorie $categorie): static
+    {
+        $this->categorie = $categorie;
+        $this->updatedAt = new \DateTimeImmutable();
 
         return $this;
     }
