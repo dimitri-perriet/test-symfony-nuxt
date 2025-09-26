@@ -63,12 +63,12 @@ class Livre
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\ManyToOne(targetEntity: Auteur::class, inversedBy: 'livres')]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     #[Groups(['livre:read', 'livre:write'])]
     private ?Auteur $auteur = null;
 
     #[ORM\ManyToOne(targetEntity: Categorie::class, inversedBy: 'livres')]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     #[Groups(['livre:read', 'livre:write'])]
     private ?Categorie $categorie = null;
 
