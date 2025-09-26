@@ -3,10 +3,8 @@
     <div class="card-body">
       <!-- Avatar et nom -->
       <div class="flex items-center gap-4 mb-4">
-        <div class="avatar placeholder">
-          <div class="bg-neutral text-neutral-content w-16 rounded-full">
-            <span class="text-xl">{{ getInitials(author) }}</span>
-          </div>
+        <div class="w-16 h-16 bg-neutral text-neutral-content rounded-full flex items-center justify-center">
+          <span class="text-xl font-bold">{{ getInitials(author) }}</span>
         </div>
         <div>
           <h2 class="card-title">

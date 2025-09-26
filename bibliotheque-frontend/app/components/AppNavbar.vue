@@ -40,11 +40,9 @@
       <div v-if="isAuthenticated" class="flex items-center gap-2 ml-4">
         <!-- Dropdown utilisateur -->
         <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-            <div class="avatar placeholder">
-              <div class="bg-neutral text-neutral-content w-10 rounded-full">
-                <span class="text-xs">{{ userInitials }}</span>
-              </div>
+          <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+            <div class="w-10 h-10 bg-neutral text-neutral-content rounded-full flex items-center justify-center">
+              <span class="text-xs font-bold">{{ userInitials }}</span>
             </div>
           </div>
           <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
