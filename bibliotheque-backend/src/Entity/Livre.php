@@ -10,9 +10,12 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Repository\LivreRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: LivreRepository::class)]
 #[ApiResource(
+    normalizationContext: ['groups' => ['livre:read']],
+    denormalizationContext: ['groups' => ['livre:write']],
     operations: [
         new GetCollection(),
         new Get(),
@@ -32,36 +35,46 @@ class Livre
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['livre:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['livre:read', 'livre:write'])]
     private ?string $titre = null;
 
     #[ORM\Column(length: 13, unique: true, nullable: true)]
+    #[Groups(['livre:read', 'livre:write'])]
     private ?string $isbn = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Groups(['livre:read', 'livre:write'])]
     private ?string $resume = null;
 
     #[ORM\Column(type: 'date', nullable: true)]
+    #[Groups(['livre:read', 'livre:write'])]
     private ?\DateTimeInterface $datePublication = null;
 
     #[ORM\Column]
+    #[Groups(['livre:read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
+    #[Groups(['livre:read'])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\ManyToOne(targetEntity: Auteur::class, inversedBy: 'livres')]
     #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['livre:read', 'livre:write'])]
     private ?Auteur $auteur = null;
 
     #[ORM\ManyToOne(targetEntity: Categorie::class, inversedBy: 'livres')]
     #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['livre:read', 'livre:write'])]
     private ?Categorie $categorie = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'livres')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['livre:read', 'livre:write'])]
     private ?User $proprietaire = null;
 
     public function __construct()

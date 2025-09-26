@@ -12,6 +12,7 @@ use App\Repository\AuteurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: AuteurRepository::class)]
 #[ApiResource(
@@ -28,12 +29,15 @@ class Auteur
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['livre:read', 'auteur:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['livre:read', 'auteur:read', 'auteur:write'])]
     private ?string $nom = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['livre:read', 'auteur:read', 'auteur:write'])]
     private ?string $prenom = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
