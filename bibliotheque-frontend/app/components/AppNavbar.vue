@@ -36,16 +36,55 @@
         <UiThemeToggle />
       </div>
 
+      <!-- Menu utilisateur connecté -->
+      <div v-if="isAuthenticated" class="flex items-center gap-2 ml-4">
+        <!-- Dropdown utilisateur -->
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+            <div class="avatar placeholder">
+              <div class="bg-neutral text-neutral-content w-10 rounded-full">
+                <span class="text-xs">{{ userInitials }}</span>
+              </div>
+            </div>
+          </div>
+          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+            <li>
+              <div class="flex flex-col gap-1 p-2">
+                <span class="font-medium">{{ userFullName }}</span>
+                <span class="text-xs opacity-60">{{ user?.email }}</span>
+              </div>
+            </li>
+            <div class="divider my-1"></div>
+            <li><a>Mon profil (TODO)</a></li>
+            <li v-if="isAdmin"><a>Administration (TODO)</a></li>
+            <div class="divider my-1"></div>
+            <li><a @click="handleLogout" class="text-error">Déconnexion</a></li>
+          </ul>
+        </div>
+      </div>
       
-      <!-- Boutons de connexion -->
-      <div class="flex gap-2 ml-4">
-        <button class="btn btn-outline btn-xs sm:btn-sm">Se connecter</button>
-        <button class="btn btn-primary btn-xs sm:btn-sm">S'inscrire</button>
+      <!-- Boutons de connexion pour utilisateurs non connectés -->
+      <div v-else class="flex gap-2 ml-4">
+        <NuxtLink to="/login" class="btn btn-outline btn-xs sm:btn-sm">
+          Se connecter
+        </NuxtLink>
+        <NuxtLink to="/register" class="btn btn-primary btn-xs sm:btn-sm">
+          S'inscrire
+        </NuxtLink>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// Aucune logique nécessaire pour l'instant
+const { isAuthenticated, user, userFullName, userInitials, isAdmin, logout } = useAuth()
+
+// Gérer la déconnexion
+const handleLogout = async () => {
+  try {
+    await logout()
+  } catch (error) {
+    console.error('Erreur lors de la déconnexion:', error)
+  }
+}
 </script>

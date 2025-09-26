@@ -15,9 +15,12 @@
             <NuxtLink to="/livres" class="btn btn-primary btn-lg">
               Parcourir les livres
             </NuxtLink>
-            <button class="btn btn-outline btn-lg">
+            <NuxtLink v-if="!isAuthenticated" to="/register" class="btn btn-outline btn-lg">
               Créer un compte
-            </button>
+            </NuxtLink>
+            <NuxtLink v-else to="/livres" class="btn btn-outline btn-lg">
+              La bibliothèque
+            </NuxtLink>
           </div>
         </div>
       </div>
@@ -214,8 +217,9 @@ useHead({
   ]
 })
 
-// Import du composable API
+// Import des composables
 const { getStats, getBooks } = useApi()
+const { isAuthenticated } = useAuth()
 
 // États de chargement et données
 const isLoading = ref(true)
