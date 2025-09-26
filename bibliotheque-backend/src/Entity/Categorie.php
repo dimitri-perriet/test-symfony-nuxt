@@ -22,7 +22,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new Post(security: "is_granted('ROLE_USER')"),  // Création par utilisateurs authentifiés
         new Put(security: "is_granted('ROLE_ADMIN')"),  // Modification par administrateurs uniquement
         new Delete(security: "is_granted('ROLE_ADMIN')") // Suppression par administrateurs uniquement
-    ]
+    ],
+    filters: ['App\Filter\SearchFilter']
 )]
 class Categorie
 {
