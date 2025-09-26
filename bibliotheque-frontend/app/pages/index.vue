@@ -18,9 +18,6 @@
             <NuxtLink v-if="!isAuthenticated" to="/register" class="btn btn-outline btn-lg">
               Créer un compte
             </NuxtLink>
-            <NuxtLink v-else to="/livres" class="btn btn-outline btn-lg">
-              La bibliothèque
-            </NuxtLink>
           </div>
         </div>
       </div>
@@ -188,7 +185,7 @@
     </section>
 
     <!-- Section CTA finale -->
-    <section class="py-16 bg-base-200">
+    <section v-if="!isAuthenticated" class="py-16 bg-base-200">
       <div class="container mx-auto px-4 text-center">
         <h2 class="text-3xl font-bold mb-4">Prêt à commencer ?</h2>
         <p class="text-lg opacity-70 mb-8">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vel nisi quis urna mollis sagittis.</p>

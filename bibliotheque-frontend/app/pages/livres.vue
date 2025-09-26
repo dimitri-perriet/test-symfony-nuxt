@@ -1,55 +1,23 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <!-- En-tête -->
-    <div class="hero bg-base-200 rounded-box mb-8">
-      <div class="hero-content text-center">
-        <div class="max-w-md">
-          <h1 class="text-5xl font-bold">Catalogue des livres</h1>
-          <p class="py-6">
-            {{ books.length }} {{ books.length <= 1 ? 'livre' : 'livres' }} dans notre collection
-          </p>
-        </div>
-      </div>
-    </div>
+    <PageHeader
+      title="Catalogue des livres"
+      :count="books.length"
+      singular="livre"
+      plural="livres"
+      add-button-text="Ajouter un livre"
+      button-class="btn-primary"
+      @add="openAddModal"
+    />
 
     <!-- Barre de recherche et filtres -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <div class="flex flex-col lg:flex-row gap-4">
-          <!-- Recherche -->
-          <div class="flex-1">
-            <label class="input input-bordered flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                class="h-4 w-4 opacity-70">
-                <path
-                  fill-rule="evenodd"
-                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                  clip-rule="evenodd" />
-              </svg>
-              <input 
-                v-model="searchQuery"
-                type="text" 
-                class="grow" 
-                placeholder="Rechercher par titre, auteur, ISBN..." 
-              />
-            </label>
-          </div>
-
-          <!-- Filtre par catégorie -->
-          <div class="lg:w-64">
-            <select v-model="selectedCategory" class="select select-bordered w-full">
-              <option value="">Toutes les catégories</option>
-              <option v-for="categorie in categories" :key="categorie.id" :value="categorie.id">
-                {{ categorie.nom }}
-              </option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
+    <SearchFilters
+      v-model:search-query="searchQuery"
+      v-model:selected-category="selectedCategory"
+      search-placeholder="Rechercher par titre, auteur, ISBN..."
+      :categories="categories"
+    />
 
     <!-- Chargement avec skeletons -->
     <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -60,23 +28,12 @@
     </div>
 
     <!-- Erreur -->
-    <div v-else-if="error" class="alert alert-error mb-8">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6 shrink-0 stroke-current"
-        fill="none"
-        viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <div>
-        <h3 class="font-bold">Erreur de chargement</h3>
-        <div class="text-xs">{{ error }}</div>
-      </div>
-    </div>
+    <ErrorAlert
+      v-else-if="error"
+      :message="error"
+      show-retry
+      @retry="loadData"
+    />
 
     <!-- Liste des livres -->
     <div v-else-if="filteredBooks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -84,43 +41,60 @@
         v-for="livre in filteredBooks"
         :key="livre.id"
         :book="livre"
+        :can-edit="canEditBook(livre)"
         @view-details="handleViewDetails"
+        @edit="openEditModal"
+        @delete="openDeleteModal"
       />
     </div>
 
     <!-- Aucun résultat -->
-    <div v-else class="hero min-h-96">
-      <div class="hero-content text-center">
-        <div class="max-w-md">
-          <div class="w-24 h-24 mx-auto mb-4 opacity-20">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-            </svg>
-          </div>
-          <h1 class="text-3xl font-bold">
-            {{ searchQuery || selectedCategory ? 'Aucun livre trouvé' : 'Aucun livre dans la collection' }}
-          </h1>
-          <p class="py-6 opacity-70">
-            {{ searchQuery || selectedCategory 
-              ? 'Essayez de modifier vos critères de recherche.' 
-              : 'La collection est vide pour le moment.' 
-            }}
-          </p>
-          <button 
-            v-if="searchQuery || selectedCategory" 
-            @click="clearFilters"
-            class="btn btn-primary"
-          >
-            Effacer les filtres
+    <EmptyState
+      v-else
+      :title="searchQuery || selectedCategory ? 'Aucun livre trouvé' : 'Aucun livre dans la collection'"
+      :description="searchQuery || selectedCategory ? 'Essayez de modifier vos critères de recherche.' : 'La collection est vide pour le moment.'"
+      :show-action="!searchQuery && !selectedCategory"
+      action-text="Ajouter votre premier livre"
+      action-button-class="btn-primary"
+      :show-clear-filters="!!(searchQuery || selectedCategory)"
+      @action="openAddModal"
+      @clear-filters="clearFilters"
+    />
+
+    <!-- Modal d'ajout/modification -->
+    <BookModal
+      :is-open="showModal"
+      :book="currentBook"
+      @close="closeModal"
+      @success="handleModalSuccess"
+    />
+
+    <!-- Modal de confirmation de suppression -->
+    <div class="modal" :class="{ 'modal-open': showDeleteModal }">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Confirmer la suppression</h3>
+        <p class="py-4">
+          Êtes-vous sûr de vouloir supprimer le livre "{{ bookToDelete?.titre }}" ?
+          Cette action est irréversible.
+        </p>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="cancelDelete" :disabled="deleteLoading">
+            Annuler
+          </button>
+          <button class="btn btn-error" @click="confirmDelete" :disabled="deleteLoading">
+            <span v-if="deleteLoading" class="loading loading-spinner loading-sm"></span>
+            Supprimer
           </button>
         </div>
       </div>
+      <div class="modal-backdrop" @click="cancelDelete"></div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 const { getBooks, getCategories } = useApi()
+const { user, isAuthenticated, isAdmin } = useAuth()
 
 // Meta
 useHead({
@@ -133,6 +107,8 @@ useHead({
   ]
 })
 
+
+
 // État 
 const books = ref<any[]>([])
 const categories = ref<any[]>([])
@@ -141,10 +117,85 @@ const error = ref<string | null>(null)
 const searchQuery = ref('')
 const selectedCategory = ref('')
 
+// État des modals
+const showModal = ref(false)
+const currentBook = ref<any>(null)
+const showDeleteModal = ref(false)
+const bookToDelete = ref<any>(null)
+const deleteLoading = ref(false)
+
 // Gérer les détails d'un livre
 const handleViewDetails = (book: any) => {
   console.log('Voir détails du livre:', book)
   // Ici on pourrait naviguer vers une page de détail ou ouvrir une modal
+}
+
+// Vérifier si l'utilisateur peut modifier/supprimer un livre
+const canEditBook = (book: any) => {
+  if (!isAuthenticated.value) return false
+  if (isAdmin.value) return true
+  return book.proprietaire?.id === user.value?.id
+}
+
+// Gestion des modals
+const openAddModal = () => {
+  currentBook.value = null
+  showModal.value = true
+}
+
+const openEditModal = (book: any) => {
+  currentBook.value = book
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  currentBook.value = null
+}
+
+const handleModalSuccess = () => {
+  loadData() // Recharger les données
+}
+
+// Gestion de la suppression
+const openDeleteModal = (book: any) => {
+  bookToDelete.value = book
+  showDeleteModal.value = true
+}
+
+const cancelDelete = () => {
+  showDeleteModal.value = false
+  bookToDelete.value = null
+}
+
+const confirmDelete = async () => {
+  if (!bookToDelete.value) return
+
+  deleteLoading.value = true
+  try {
+    await $fetch(`http://localhost:8000/api/livres/${bookToDelete.value.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${await getToken()}`
+      }
+    })
+    
+    // Retirer le livre de la liste local
+    books.value = books.value.filter(book => book.id !== bookToDelete.value.id)
+    
+    cancelDelete()
+  } catch (err: any) {
+    console.error('Erreur suppression livre:', err)
+    // Ici on pourrait afficher une notification d'erreur
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+// Fonction utilitaire pour obtenir le token
+const getToken = async () => {
+  // Cette fonction devrait être accessible depuis useAuth
+  return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
 }
 
 // Livres filtrés

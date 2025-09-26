@@ -1,54 +1,27 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <!-- En-tête -->
-    <div class="hero bg-base-200 rounded-box mb-8">
-      <div class="hero-content text-center">
-        <div class="max-w-md">
-          <h1 class="text-5xl font-bold">Auteurs</h1>
-          <p class="py-6">
-            {{ authors.length }} {{ authors.length <= 1 ? 'auteur' : 'auteurs' }} dans notre collection
-          </p>
-        </div>
-      </div>
-    </div>
+    <PageHeader
+      title="Auteurs"
+      :count="authors.length"
+      singular="auteur"
+      plural="auteurs"
+      add-button-text="Ajouter un auteur"
+      button-class="btn-secondary"
+      @add="openAddModal"
+    />
 
     <!-- Barre de recherche -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <div class="flex flex-col lg:flex-row gap-4">
-          <!-- Recherche -->
-          <div class="flex-1">
-            <label class="input input-bordered flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                class="h-4 w-4 opacity-70">
-                <path
-                  fill-rule="evenodd"
-                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                  clip-rule="evenodd" />
-              </svg>
-              <input 
-                v-model="searchQuery"
-                type="text" 
-                class="grow" 
-                placeholder="Rechercher par nom, prénom..." 
-              />
-            </label>
-          </div>
-
-          <!-- Tri -->
-          <div class="lg:w-64">
-            <select v-model="sortBy" class="select select-bordered w-full">
-              <option value="nom">Trier par nom</option>
-              <option value="prenom">Trier par prénom</option>
-              <option value="naissance">Trier par date de naissance</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
+    <SearchFilters
+      v-model:search-query="searchQuery"
+      v-model:sort-by="sortBy"
+      search-placeholder="Rechercher par nom, prénom..."
+      :sort-options="[
+        { value: 'nom', label: 'Trier par nom' },
+        { value: 'prenom', label: 'Trier par prénom' },
+        { value: 'naissance', label: 'Trier par date de naissance' }
+      ]"
+    />
 
     <!-- Chargement avec skeletons -->
     <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -59,23 +32,12 @@
     </div>
 
     <!-- Erreur -->
-    <div v-else-if="error" class="alert alert-error mb-8">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6 shrink-0 stroke-current"
-        fill="none"
-        viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <div>
-        <h3 class="font-bold">Erreur de chargement</h3>
-        <div class="text-xs">{{ error }}</div>
-      </div>
-    </div>
+    <ErrorAlert
+      v-if="error"
+      :message="error"
+      show-retry
+      @retry="loadData"
+    />
 
     <!-- Liste des auteurs -->
     <div v-else-if="filteredAuthors.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -85,37 +47,29 @@
         :author="auteur"
         :books-count="getAuthorBooksCount(auteur.id)"
         @view-books="showAuthorBooks"
+        @edit-author="openEditModal"
+        @delete-author="confirmDeleteAuthor"
       />
     </div>
 
     <!-- Aucun résultat -->
-    <div v-else class="hero min-h-96">
-      <div class="hero-content text-center">
-        <div class="max-w-md">
-          <div class="w-24 h-24 mx-auto mb-4 opacity-20">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-          </div>
-          <h1 class="text-3xl font-bold">
-            {{ searchQuery ? 'Aucun auteur trouvé' : 'Aucun auteur dans la collection' }}
-          </h1>
-          <p class="py-6 opacity-70">
-            {{ searchQuery 
-              ? 'Essayez de modifier vos critères de recherche.' 
-              : 'La collection d\'auteurs est vide pour le moment.' 
-            }}
-          </p>
-          <button 
-            v-if="searchQuery" 
-            @click="clearSearch"
-            class="btn btn-primary"
-          >
-            Effacer la recherche
-          </button>
-        </div>
-      </div>
-    </div>
+    <EmptyState
+      v-else
+      :title="searchQuery ? 'Aucun auteur trouvé' : 'Aucun auteur dans la collection'"
+      :description="searchQuery ? 'Essayez de modifier vos critères de recherche.' : 'La collection d\'auteurs est vide pour le moment.'"
+      :show-action="!searchQuery"
+      action-text="Ajouter votre premier auteur"
+      action-button-class="btn-secondary"
+      :show-clear-filters="!!searchQuery"
+      @action="openAddModal"
+      @clear-filters="clearSearch"
+    >
+      <template #icon>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+      </template>
+    </EmptyState>
 
     <!-- Modal pour afficher les livres d'un auteur -->
     <dialog ref="booksModal" class="modal">
@@ -124,7 +78,7 @@
           <h3 class="font-bold text-lg">
             Livres de {{ selectedAuthor?.prenom }} {{ selectedAuthor?.nom }}
           </h3>
-          <button @click="closeModal" class="btn btn-sm btn-circle btn-ghost">✕</button>
+          <button @click="closeBooksModal" class="btn btn-sm btn-circle btn-ghost">✕</button>
         </div>
         
         <div v-if="authorBooks.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -158,11 +112,32 @@
         <button>close</button>
       </form>
     </dialog>
+
+    <!-- Modal d'ajout/modification d'auteur -->
+    <AuthorModal
+      :is-open="isAuthorModalOpen"
+      :author="selectedAuthorForEdit"
+      @close="closeAuthorModal"
+      @success="handleAuthorSaved"
+    />
+
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmationModal
+      :is-open="isDeleteModalOpen"
+      :title="deleteModalTitle"
+      :message="deleteModalMessage"
+      :cascade-warning="deleteModalCascadeWarning"
+      :is-loading="isDeleting"
+      @confirm="performDelete"
+      @cancel="closeDeleteModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 const { getAuthors, getBooks } = useApi()
+const { isAuthenticated, isAdmin } = useAuth()
+const { showSuccess, showError } = useToast()
 
 // Meta
 useHead({
@@ -185,6 +160,33 @@ const sortBy = ref('nom')
 const selectedAuthor = ref<any | null>(null)
 const authorBooks = ref<any[]>([])
 const booksModal = ref<any>(null)
+
+// État pour le modal d'ajout/modification d'auteur
+const isAuthorModalOpen = ref(false)
+const selectedAuthorForEdit = ref<any | null>(null)
+
+// Gestion de la modale de confirmation de suppression
+const isDeleteModalOpen = ref(false)
+const isDeleting = ref(false)
+const authorToDelete = ref<any | null>(null)
+
+const deleteModalTitle = computed(() => {
+  if (!authorToDelete.value) return ''
+  return `Supprimer l'auteur`
+})
+
+const deleteModalMessage = computed(() => {
+  if (!authorToDelete.value) return ''
+  return `Êtes-vous sûr de vouloir supprimer "${authorToDelete.value.prenom} ${authorToDelete.value.nom}" ?`
+})
+
+const deleteModalCascadeWarning = computed(() => {
+  if (!authorToDelete.value) return ''
+  const booksCount = getAuthorBooksCount(authorToDelete.value.id)
+  return booksCount > 0 
+    ? `Cette action supprimera également ${booksCount} livre(s) associé(s) de façon définitive !`
+    : ''
+})
 
 // Fonction pour formater les dates (pour la modal)
 const formatDate = (dateString: string) => {
@@ -244,11 +246,82 @@ const showAuthorBooks = (auteur: any) => {
   booksModal.value?.showModal()
 }
 
-// Fermer la modal
-const closeModal = () => {
+// Fermer la modal des livres
+const closeBooksModal = () => {
   booksModal.value?.close()
   selectedAuthor.value = null
   authorBooks.value = []
+}
+
+// Fonctions pour le modal d'auteur
+const openAddModal = () => {
+  selectedAuthorForEdit.value = null
+  isAuthorModalOpen.value = true
+}
+
+const openEditModal = (author: any) => {
+  selectedAuthorForEdit.value = author
+  isAuthorModalOpen.value = true
+}
+
+const closeAuthorModal = () => {
+  isAuthorModalOpen.value = false
+  selectedAuthorForEdit.value = null
+}
+
+const handleAuthorSaved = (author: any) => {
+  // Recharger les données pour voir le nouvel auteur
+  loadData()
+}
+
+// Nouvelle fonction de confirmation de suppression avec modale
+const confirmDeleteAuthor = (author: any) => {
+  authorToDelete.value = author
+  isDeleteModalOpen.value = true
+}
+
+// Fonction pour fermer la modale de suppression
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false
+  authorToDelete.value = null
+  isDeleting.value = false
+}
+
+// Fonction de suppression effective
+const performDelete = async () => {
+  if (!authorToDelete.value) return
+  
+  try {
+    isDeleting.value = true
+    
+    await $fetch(`http://localhost:8000/api/auteurs/${authorToDelete.value.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/ld+json',
+        'Authorization': `Bearer ${useAuth().token.value}`
+      }
+    })
+    
+    // Recharger les données
+    await loadData()
+    
+    // Afficher un message de succès
+    showSuccess(
+      'Auteur supprimé', 
+      `"${authorToDelete.value.prenom} ${authorToDelete.value.nom}" a été supprimé avec succès`
+    )
+    
+    // Fermer la modale
+    closeDeleteModal()
+    
+  } catch (err: any) {
+    console.error('Erreur lors de la suppression:', err)
+    showError(
+      'Erreur de suppression',
+      err.data?.detail || 'Une erreur est survenue lors de la suppression'
+    )
+    isDeleting.value = false
+  }
 }
 
 // Charger les données

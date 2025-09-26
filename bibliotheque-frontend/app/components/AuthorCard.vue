@@ -49,13 +49,37 @@
 
       <!-- Actions -->
       <div class="card-actions justify-between items-center">
-        <button 
-          @click="$emit('view-books', author)"
-          class="btn btn-primary btn-sm"
-          :disabled="booksCount === 0"
-        >
-          Voir les livres
-        </button>
+        <div class="flex gap-2">
+          <button 
+            @click="$emit('view-books', author)"
+            class="btn btn-primary btn-sm"
+            :disabled="booksCount === 0"
+          >
+            Voir les livres
+          </button>
+          <!-- Bouton d'édition (visible si admin) -->
+          <button 
+            v-if="isAdmin"
+            @click="$emit('edit-author', author)"
+            class="btn btn-secondary btn-sm"
+            title="Modifier l'auteur"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <!-- Bouton de suppression (visible si admin) -->
+          <button 
+            v-if="isAdmin"
+            @click="$emit('delete-author', author)"
+            class="btn btn-error btn-sm"
+            title="Supprimer l'auteur"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
         <div class="badge badge-ghost badge-sm">
           ID: {{ author.id }}
         </div>
@@ -83,7 +107,12 @@ defineProps<Props>()
 
 defineEmits<{
   'view-books': [author: Author]
+  'edit-author': [author: Author]
+  'delete-author': [author: Author]
 }>()
+
+// Authentification
+const { isAuthenticated, isAdmin } = useAuth()
 
 // Fonction pour obtenir les initiales
 const getInitials = (author: Author) => {

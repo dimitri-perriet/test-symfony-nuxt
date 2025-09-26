@@ -1,73 +1,28 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <!-- En-tête -->
-    <div class="hero bg-base-200 rounded-box mb-8">
-      <div class="hero-content text-center">
-        <div class="max-w-md">
-          <h1 class="text-5xl font-bold">Catégories littéraires</h1>
-          <p class="py-6">
-            {{ categories.length }} {{ categories.length <= 1 ? 'catégorie' : 'catégories' }} dans notre collection
-          </p>
-        </div>
-      </div>
-    </div>
+    <PageHeader
+      title="Catégories littéraires"
+      :count="categories.length"
+      singular="catégorie"
+      plural="catégories"
+      add-button-text="Ajouter une catégorie"
+      button-class="btn-accent"
+      @add="openAddModal"
+    />
 
     <!-- Barre de recherche et options -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-      <div class="card-body">
-        <div class="flex flex-col lg:flex-row gap-4">
-          <!-- Recherche -->
-          <div class="flex-1">
-            <label class="input input-bordered flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                class="h-4 w-4 opacity-70">
-                <path
-                  fill-rule="evenodd"
-                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                  clip-rule="evenodd" />
-              </svg>
-              <input 
-                v-model="searchQuery"
-                type="text" 
-                class="grow" 
-                placeholder="Rechercher par nom, description..." 
-              />
-            </label>
-          </div>
-
-          <!-- Tri -->
-          <div class="lg:w-64">
-            <select v-model="sortBy" class="select select-bordered w-full">
-              <option value="nom">Trier par nom</option>
-              <option value="livres">Trier par nombre de livres</option>
-            </select>
-          </div>
-
-          <!-- Vue -->
-          <div class="join">
-            <button 
-              @click="viewMode = 'grid'"
-              :class="['btn join-item', viewMode === 'grid' ? 'btn-active' : '']"
-            >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-              </svg>
-            </button>
-            <button 
-              @click="viewMode = 'list'"
-              :class="['btn join-item', viewMode === 'list' ? 'btn-active' : '']"
-            >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <SearchFilters
+      v-model:search-query="searchQuery"
+      v-model:sort-by="sortBy"
+      v-model:view-mode="viewMode"
+      search-placeholder="Rechercher par nom, description..."
+      :sort-options="[
+        { value: 'nom', label: 'Trier par nom' },
+        { value: 'livres', label: 'Trier par nombre de livres' }
+      ]"
+      show-view-toggle
+    />
 
     <!-- Chargement avec skeletons - Vue grille -->
     <div v-if="pending && viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -86,23 +41,12 @@
     </div>
 
     <!-- Erreur -->
-    <div v-else-if="error" class="alert alert-error mb-8">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6 shrink-0 stroke-current"
-        fill="none"
-        viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <div>
-        <h3 class="font-bold">Erreur de chargement</h3>
-        <div class="text-xs">{{ error }}</div>
-      </div>
-    </div>
+    <ErrorAlert
+      v-else-if="error"
+      :message="error"
+      show-retry
+      @retry="loadData"
+    />
 
     <!-- Vue grille -->
     <div v-else-if="filteredCategories.length > 0 && viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -112,6 +56,8 @@
         :category="categorie"
         :books-count="getCategoryBooksCount(categorie.id)"
         @view-books="showCategoryBooks"
+        @edit-category="openEditModal"
+        @delete-category="confirmDeleteCategory"
       />
     </div>
 
@@ -123,37 +69,29 @@
         :category="categorie"
         :books-count="getCategoryBooksCount(categorie.id)"
         @view-books="showCategoryBooks"
+        @edit-category="openEditModal"
+        @delete-category="confirmDeleteCategory"
       />
     </div>
 
     <!-- Aucun résultat -->
-    <div v-else class="hero min-h-96">
-      <div class="hero-content text-center">
-        <div class="max-w-md">
-          <div class="w-24 h-24 mx-auto mb-4 opacity-20">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-            </svg>
-          </div>
-          <h1 class="text-3xl font-bold">
-            {{ searchQuery ? 'Aucune catégorie trouvée' : 'Aucune catégorie dans la collection' }}
-          </h1>
-          <p class="py-6 opacity-70">
-            {{ searchQuery 
-              ? 'Essayez de modifier vos critères de recherche.' 
-              : 'La collection de catégories est vide pour le moment.' 
-            }}
-          </p>
-          <button 
-            v-if="searchQuery" 
-            @click="clearSearch"
-            class="btn btn-primary"
-          >
-            Effacer la recherche
-          </button>
-        </div>
-      </div>
-    </div>
+    <EmptyState
+      v-else
+      :title="searchQuery ? 'Aucune catégorie trouvée' : 'Aucune catégorie dans la collection'"
+      :description="searchQuery ? 'Essayez de modifier vos critères de recherche.' : 'La collection de catégories est vide pour le moment.'"
+      :show-action="!searchQuery"
+      action-text="Ajouter votre première catégorie"
+      action-button-class="btn-accent"
+      :show-clear-filters="!!searchQuery"
+      @action="openAddModal"
+      @clear-filters="clearSearch"
+    >
+      <template #icon>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+        </svg>
+      </template>
+    </EmptyState>
 
     <!-- Modal pour afficher les livres d'une catégorie -->
     <dialog ref="booksModal" class="modal">
@@ -213,11 +151,32 @@
         <button>close</button>
       </form>
     </dialog>
+
+    <!-- Modal d'ajout/modification de catégorie -->
+    <CategoryModal
+      :is-open="isCategoryModalOpen"
+      :category="selectedCategoryForEdit"
+      @close="closeCategoryModal"
+      @success="handleCategorySaved"
+    />
+
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmationModal
+      :is-open="isDeleteModalOpen"
+      :title="deleteModalTitle"
+      :message="deleteModalMessage"
+      :cascade-warning="deleteModalCascadeWarning"
+      :is-loading="isDeleting"
+      @confirm="performDelete"
+      @cancel="closeDeleteModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 const { getCategories, getBooks } = useApi()
+const { isAuthenticated, isAdmin } = useAuth()
+const { showSuccess, showError } = useToast()
 
 // Meta
 useHead({
@@ -237,10 +196,37 @@ const pending = ref(true)
 const error = ref<string | null>(null)
 const searchQuery = ref('')
 const sortBy = ref('nom')
-const viewMode = ref('grid')
+const viewMode = ref<'grid' | 'list'>('grid')
 const selectedCategory = ref<any | null>(null)
 const categoryBooks = ref<any[]>([])
 const booksModal = ref<any>(null)
+
+// État pour le modal d'ajout/modification de catégorie
+const isCategoryModalOpen = ref(false)
+const selectedCategoryForEdit = ref<any | null>(null)
+
+// Gestion de la modale de confirmation de suppression
+const isDeleteModalOpen = ref(false)
+const isDeleting = ref(false)
+const categoryToDelete = ref<any | null>(null)
+
+const deleteModalTitle = computed(() => {
+  if (!categoryToDelete.value) return ''
+  return `Supprimer la catégorie`
+})
+
+const deleteModalMessage = computed(() => {
+  if (!categoryToDelete.value) return ''
+  return `Êtes-vous sûr de vouloir supprimer la catégorie "${categoryToDelete.value.nom}" ?`
+})
+
+const deleteModalCascadeWarning = computed(() => {
+  if (!categoryToDelete.value) return ''
+  const booksCount = getCategoryBooksCount(categoryToDelete.value.id)
+  return booksCount > 0 
+    ? `Cette action supprimera également ${booksCount} livre(s) associé(s) de façon définitive !`
+    : ''
+})
 
 // Fonction pour formater les dates
 const formatDate = (dateString: string) => {
@@ -319,6 +305,77 @@ const loadData = async () => {
     console.error('Erreur lors du chargement:', err)
   } finally {
     pending.value = false
+  }
+}
+
+// Fonctions pour le modal de catégorie
+const openAddModal = () => {
+  selectedCategoryForEdit.value = null
+  isCategoryModalOpen.value = true
+}
+
+const openEditModal = (category: any) => {
+  selectedCategoryForEdit.value = category
+  isCategoryModalOpen.value = true
+}
+
+const closeCategoryModal = () => {
+  isCategoryModalOpen.value = false
+  selectedCategoryForEdit.value = null
+}
+
+const handleCategorySaved = (category: any) => {
+  // Recharger les données pour voir la nouvelle catégorie
+  loadData()
+}
+
+// Nouvelle fonction de confirmation de suppression avec modale
+const confirmDeleteCategory = (category: any) => {
+  categoryToDelete.value = category
+  isDeleteModalOpen.value = true
+}
+
+// Fonction pour fermer la modale de suppression
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false
+  categoryToDelete.value = null
+  isDeleting.value = false
+}
+
+// Fonction de suppression effective
+const performDelete = async () => {
+  if (!categoryToDelete.value) return
+  
+  try {
+    isDeleting.value = true
+    
+    await $fetch(`http://localhost:8000/api/categories/${categoryToDelete.value.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/ld+json',
+        'Authorization': `Bearer ${useAuth().token.value}`
+      }
+    })
+    
+    // Recharger les données
+    await loadData()
+    
+    // Afficher un message de succès
+    showSuccess(
+      'Catégorie supprimée', 
+      `La catégorie "${categoryToDelete.value.nom}" a été supprimée avec succès`
+    )
+    
+    // Fermer la modale
+    closeDeleteModal()
+    
+  } catch (err: any) {
+    console.error('Erreur lors de la suppression:', err)
+    showError(
+      'Erreur de suppression',
+      err.data?.detail || 'Une erreur est survenue lors de la suppression'
+    )
+    isDeleting.value = false
   }
 }
 

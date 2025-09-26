@@ -49,14 +49,70 @@
 
       <!-- Actions -->
       <div class="card-actions justify-between items-center">
-        <button 
-          @click="$emit('view-details', book)"
-          class="btn btn-primary btn-sm"
-        >
-          Voir détails
-        </button>
-        <div class="badge badge-ghost badge-sm">
-          ID: {{ book.id }}
+        <div class="flex gap-2">
+          <button 
+            @click="$emit('view-details', book)"
+            class="btn btn-primary btn-sm"
+          >
+            Voir détails
+          </button>
+          
+          <!-- Boutons d'édition (visible si l'utilisateur peut éditer) -->
+          <div v-if="canEdit" class="flex gap-1">
+            <button 
+              @click="$emit('edit', book)"
+              class="btn btn-secondary btn-sm"
+              title="Modifier"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button 
+              @click="$emit('delete', book)"
+              class="btn btn-error btn-sm"
+              title="Supprimer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Actions et propriétaire -->
+        <div class="flex justify-between items-end">
+          <!-- Actions (visible si propriétaire ou admin) -->
+          <div v-if="canEdit" class="flex gap-2">
+            <button 
+              @click="$emit('edit', book)"
+              class="btn btn-primary btn-sm"
+              title="Modifier le livre"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button 
+              @click="$emit('delete', book)"
+              class="btn btn-error btn-sm"
+              title="Supprimer le livre"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Propriétaire -->
+          <div class="text-right">
+            <div v-if="book.proprietaire" class="badge badge-ghost badge-sm mb-1">
+              {{ book.proprietaire.prenom }} {{ book.proprietaire.nom }}
+            </div>
+            <div class="badge badge-ghost badge-sm">
+              ID: {{ book.id }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -80,17 +136,28 @@ interface Book {
     nom: string
     couleur?: string
   }
+  proprietaire?: {
+    id: number
+    nom: string
+    prenom: string
+  }
 }
 
 interface Props {
   book: Book
+  canEdit?: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 defineEmits<{
   'view-details': [book: Book]
+  'edit': [book: Book]
+  'delete': [book: Book]
 }>()
+
+// Authentification (pour les types uniquement)
+const { user } = useAuth()
 
 // Fonction pour formater les dates
 const formatDate = (dateString: string) => {
