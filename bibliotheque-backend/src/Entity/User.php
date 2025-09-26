@@ -19,7 +19,15 @@ use Symfony\Component\Serializer\Annotation\Groups;
     operations: [
         new GetCollection(security: "is_granted('ROLE_ADMIN')"),
         new Get(security: "is_granted('ROLE_ADMIN') or object == user"),
-        new Post(validationContext: ['groups' => ['Default', 'user:create']])
+        new Get(
+            uriTemplate: '/me',
+            security: "is_granted('ROLE_USER')",
+            provider: 'App\State\CurrentUserProvider'
+        ),
+        new Post(
+            validationContext: ['groups' => ['Default', 'user:create']],
+            processor: 'App\State\UserProcessor'
+        )
     ],
     normalizationContext: ['groups' => ['user:read']],
     denormalizationContext: ['groups' => ['user:create', 'user:update']]
@@ -55,8 +63,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Groups(['user:create', 'user:update'])]
     private ?string $password = null;
+
+    #[Groups(['user:create', 'user:update'])]
+    private ?string $plainPassword = null;
 
     #[ORM\Column(length: 100)]
     #[Groups(['user:read', 'user:create', 'user:update'])]
@@ -136,6 +146,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword(?string $plainPassword): static
+    {
+        $this->plainPassword = $plainPassword;
 
         return $this;
     }
