@@ -1,0 +1,124 @@
+<template>
+  <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-200">
+    <div class="card-body">
+      <!-- Avatar et nom -->
+      <div class="flex items-center gap-4 mb-4">
+        <div class="avatar placeholder">
+          <div class="bg-neutral text-neutral-content w-16 rounded-full">
+            <span class="text-xl">{{ getInitials(author) }}</span>
+          </div>
+        </div>
+        <div>
+          <h2 class="card-title">
+            {{ author.prenom }} {{ author.nom }}
+          </h2>
+          <p class="text-base-content/70 text-sm">
+            {{ formatAuthorStatus(author) }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Dates -->
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div v-if="author.dateNaissance" class="stat">
+          <div class="stat-title text-xs">Naissance</div>
+          <div class="stat-value text-sm">{{ formatDate(author.dateNaissance) }}</div>
+        </div>
+        <div v-if="author.dateDeces" class="stat">
+          <div class="stat-title text-xs">Décès</div>
+          <div class="stat-value text-sm">{{ formatDate(author.dateDeces) }}</div>
+        </div>
+      </div>
+
+      <!-- Biographie -->
+      <div v-if="author.biographie" class="mb-4">
+        <p class="text-base-content/70 text-sm line-clamp-3">
+          {{ author.biographie }}
+        </p>
+      </div>
+
+      <!-- Nombre de livres -->
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="h-4 w-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+        </svg>
+        <span class="text-base-content/70 text-sm">
+          {{ booksCount }} {{ booksCount <= 1 ? 'livre' : 'livres' }}
+        </span>
+      </div>
+
+      <!-- Actions -->
+      <div class="card-actions justify-between items-center">
+        <button 
+          @click="$emit('view-books', author)"
+          class="btn btn-primary btn-sm"
+          :disabled="booksCount === 0"
+        >
+          Voir les livres
+        </button>
+        <div class="badge badge-ghost badge-sm">
+          ID: {{ author.id }}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+interface Author {
+  id: number
+  nom: string
+  prenom: string
+  biographie?: string
+  dateNaissance?: string
+  dateDeces?: string
+}
+
+interface Props {
+  author: Author
+  booksCount: number
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  'view-books': [author: Author]
+}>()
+
+// Fonction pour obtenir les initiales
+const getInitials = (author: Author) => {
+  const prenom = author.prenom?.charAt(0) || ''
+  const nom = author.nom?.charAt(0) || ''
+  return (prenom + nom).toUpperCase()
+}
+
+// Fonction pour formater le statut de l'auteur
+const formatAuthorStatus = (author: Author) => {
+  if (author.dateDeces) {
+    return `Décédé${author.dateDeces ? ' en ' + new Date(author.dateDeces).getFullYear() : ''}`
+  }
+  if (author.dateNaissance) {
+    const age = new Date().getFullYear() - new Date(author.dateNaissance).getFullYear()
+    return `${age} ans`
+  }
+  return 'Auteur'
+}
+
+// Fonction pour formater les dates
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+</script>
+
+<style scoped>
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>

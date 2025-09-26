@@ -74,7 +74,7 @@
           </div>
         </div>
 
-        <!-- Affichage des vraies données -->
+
         <div v-else class="stats shadow w-full">
           <div class="stat">
             <div class="stat-figure text-primary">
