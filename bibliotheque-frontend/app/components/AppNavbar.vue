@@ -31,13 +31,16 @@
     </div>
     
     <div class="navbar-end">
-      <!-- Toggle Theme -->
-      <UiThemeToggle />
+      <div class="hidden sm:inline">
+        <!-- Toggle Theme -->
+        <UiThemeToggle />
+      </div>
+
       
       <!-- Boutons de connexion -->
       <div class="flex gap-2 ml-4">
-        <button class="btn btn-outline btn-sm">Se connecter</button>
-        <button class="btn btn-primary btn-sm">S'inscrire</button>
+        <button class="btn btn-outline btn-xs sm:btn-sm">Se connecter</button>
+        <button class="btn btn-primary btn-xs sm:btn-sm">S'inscrire</button>
       </div>
     </div>
   </div>
