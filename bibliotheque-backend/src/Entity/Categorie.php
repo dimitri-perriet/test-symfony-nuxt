@@ -60,6 +60,7 @@ class Categorie
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
         $this->livres = new ArrayCollection();
+        $this->couleur = $this->generateRandomColor();
     }
 
     public function getId(): ?int
@@ -157,5 +158,36 @@ class Categorie
         }
 
         return $this;
+    }
+
+    /**
+     * Génère une couleur hexadécimale aléatoire
+     */
+    private function generateRandomColor(): string
+    {
+        $colors = [
+            '#6C5CE7', // Violet
+            '#0984E3', // Bleu
+            '#00B894', // Vert
+            '#E17055', // Orange
+            '#D63031', // Rouge
+            '#E84393', // Rose
+            '#FDCB6E', // Jaune
+            '#00CEC9', // Teal
+            '#4C51BF', // Indigo
+            '#636E72', // Gris
+            '#2D3436', // Noir
+            '#A0522D', // Marron
+            '#6C5CE7', // Violet foncé
+            '#74B9FF', // Bleu clair
+            '#55A3FF', // Bleu ciel
+            '#FD79A8', // Rose clair
+            '#FDCB6E', // Jaune doré
+            '#E17055', // Orange vif
+            '#00B894', // Vert émeraude
+            '#6C5CE7'  // Violet royal
+        ];
+
+        return $colors[array_rand($colors)];
     }
 }

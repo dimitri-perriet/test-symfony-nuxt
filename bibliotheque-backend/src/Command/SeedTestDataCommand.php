@@ -50,11 +50,11 @@ class SeedTestDataCommand extends Command
 
         // Catégories
         $categories = $this->seedCategories($io, [
-            ['nom' => 'Science-fiction', 'description' => 'Anticipation, mondes futurs, technologies', 'couleur' => '#6C5CE7'],
-            ['nom' => 'Fantasy', 'description' => 'Magie, mondes imaginaires, épopées', 'couleur' => '#00B894'],
-            ['nom' => 'Histoire', 'description' => 'Essais et récits historiques', 'couleur' => '#E17055'],
-            ['nom' => 'Informatique', 'description' => 'Programmation, systèmes, réseaux', 'couleur' => '#0984E3'],
-            ['nom' => 'Policier', 'description' => 'Enquêtes, thrillers', 'couleur' => '#D63031'],
+            ['nom' => 'Science-fiction', 'description' => 'Anticipation, mondes futurs, technologies'],
+            ['nom' => 'Fantasy', 'description' => 'Magie, mondes imaginaires, épopées'],
+            ['nom' => 'Histoire', 'description' => 'Essais et récits historiques'],
+            ['nom' => 'Informatique', 'description' => 'Programmation, systèmes, réseaux'],
+            ['nom' => 'Policier', 'description' => 'Enquêtes, thrillers'],
         ]);
 
         // Auteurs
@@ -127,7 +127,7 @@ class SeedTestDataCommand extends Command
     }
 
     /**
-     * @param list<array{nom: string, description: string, couleur: string}> $spec
+     * @param list<array{nom: string, description: string}> $spec
      * @return array<string, Categorie>
      */
     private function seedCategories(SymfonyStyle $io, array $spec): array
@@ -140,7 +140,7 @@ class SeedTestDataCommand extends Command
                 $categorie = new Categorie();
                 $categorie->setNom($item['nom']);
                 $categorie->setDescription($item['description']);
-                $categorie->setCouleur($item['couleur']);
+                // La couleur est générée automatiquement dans le constructeur
                 $this->entityManager->persist($categorie);
             }
             $result[$item['nom']] = $categorie;

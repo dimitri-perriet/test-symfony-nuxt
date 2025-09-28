@@ -75,75 +75,6 @@
             </div>
           </div>
 
-          <!-- Apparence -->
-          <div class="card bg-base-50 shadow-sm">
-            <div class="card-body">
-              <h4 class="card-title text-lg text-info mb-4">Apparence</h4>
-              
-              <div class="form-control flex flex-col">
-                <label class="label">
-                  <span class="label-text font-semibold">Couleur</span>
-                </label>
-                
-                <!-- Sélecteur de couleurs prédéfinies -->
-                <div class="grid grid-cols-6 gap-3 mb-4">
-                  <button
-                    v-for="color in predefinedColors"
-                    :key="color.value"
-                    type="button"
-                    class="btn btn-circle"
-                    :class="{ 'ring-4 ring-offset-2': form.couleur === color.value }"
-                    :style="{ backgroundColor: color.value }"
-                    :title="color.name"
-                    @click="form.couleur = color.value"
-                  >
-                    <span v-if="form.couleur === color.value" class="text-white">✓</span>
-                  </button>
-                </div>
-                
-                <!-- Sélecteur de couleur personnalisé -->
-                <div class="flex gap-2">
-                  <input
-                    v-model="form.couleur"
-                    type="color"
-                    class="w-16 h-12 border-2 border-base-300 rounded-lg cursor-pointer"
-                  />
-                  <input
-                    v-model="form.couleur"
-                    type="text"
-                    placeholder="#6C5CE7"
-                    class="input input-bordered flex-1"
-                    pattern="^#[0-9A-Fa-f]{6}$"
-                  />
-                </div>
-                
-                <!-- Aperçu -->
-                <div v-if="form.nom && form.couleur" class="mt-4">
-                  <label class="label">
-                    <span class="label-text font-semibold">Aperçu :</span>
-                  </label>
-                  <div class="flex gap-2">
-                    <div 
-                      class="badge badge-lg text-white font-medium"
-                      :style="{ backgroundColor: form.couleur, borderColor: form.couleur }"
-                    >
-                      {{ form.nom }}
-                    </div>
-                    <div 
-                      class="badge badge-outline badge-lg"
-                      :style="{ borderColor: form.couleur, color: form.couleur }"
-                    >
-                      {{ form.nom }}
-                    </div>
-                  </div>
-                </div>
-                
-                <label class="label">
-                  <span class="label-text-alt">Choisissez une couleur pour identifier visuellement cette catégorie</span>
-                </label>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Actions -->
@@ -199,29 +130,13 @@ const { token } = useAuth()
 // État du formulaire
 const form = ref({
   nom: '',
-  description: '',
-  couleur: '#6C5CE7'
+  description: ''
 })
 
 const loading = ref(false)
 const error = ref('')
 const submitted = ref(false)
 
-// Couleurs prédéfinies
-const predefinedColors = [
-  { name: 'Violet', value: '#6C5CE7' },
-  { name: 'Bleu', value: '#0984E3' },
-  { name: 'Vert', value: '#00B894' },
-  { name: 'Orange', value: '#E17055' },
-  { name: 'Rouge', value: '#D63031' },
-  { name: 'Rose', value: '#E84393' },
-  { name: 'Jaune', value: '#FDCB6E' },
-  { name: 'Teal', value: '#00CEC9' },
-  { name: 'Indigo', value: '#4C51BF' },
-  { name: 'Gris', value: '#636E72' },
-  { name: 'Noir', value: '#2D3436' },
-  { name: 'Marron', value: '#A0522D' }
-]
 
 // Computed
 const isEdit = computed(() => !!props.category?.id)
@@ -230,8 +145,7 @@ const isEdit = computed(() => !!props.category?.id)
 const resetForm = () => {
   form.value = {
     nom: '',
-    description: '',
-    couleur: '#6C5CE7'
+    description: ''
   }
   error.value = ''
   submitted.value = false
@@ -241,15 +155,13 @@ const loadCategoryData = () => {
   if (props.category) {
     form.value = {
       nom: props.category.nom || '',
-      description: props.category.description || '',
-      couleur: props.category.couleur || '#6C5CE7'
+      description: props.category.description || ''
     }
   } else if (props.initialData) {
     // Pré-remplir avec les données initiales pour la création
     form.value = {
       nom: props.initialData.nom || '',
-      description: '',
-      couleur: '#6C5CE7'
+      description: ''
     }
   }
 }
@@ -269,8 +181,7 @@ const handleSubmit = async () => {
   try {
     const categoryData = {
       nom: form.value.nom.trim(),
-      description: form.value.description?.trim() || null,
-      couleur: form.value.couleur || '#6C5CE7'
+      description: form.value.description?.trim() || null
     }
 
     let result: Category
